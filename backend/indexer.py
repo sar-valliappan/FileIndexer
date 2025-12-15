@@ -1,4 +1,7 @@
+import hashlib
+from pathlib import Path
 from typing import Callable
+
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 
@@ -24,3 +27,16 @@ class Indexer:
             name=self.settings.COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"}
         )
+    
+    def scan_directory(self, directory_path: str):
+        """Scan a directory for files and index them."""
+        directory = Path(directory_path)
+        files = list(directory.rglob('*.*'))
+        
+        return files
+    
+    def get_file_hash(self, file_path: Path):
+        with open(file_path, 'rb') as f:
+            file_hash = hashlib.sha256(f.read()).hexdigest()
+        
+        return file_hash            
