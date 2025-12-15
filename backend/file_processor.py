@@ -34,6 +34,16 @@ class FileProcessor:
             return None
         
     @staticmethod
+    def extract_text_from_txt(file_path: str) -> Optional[str]:
+        """Extract text from a TXT file."""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                return file.read()
+        except Exception as e:
+            print(f"Error extracting text from TXT: {e}")
+            return None
+
+    @staticmethod
     def process_file(file_path: str) -> Optional[str]:
         """Process a file and extract its text based on the file type."""
         extension = Path(file_path).suffix.lower()
