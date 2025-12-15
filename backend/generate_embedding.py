@@ -1,8 +1,9 @@
 import ollama
 from typing import List
+from config import Settings
 
 class GenerateEmbedding:
-    def __init__(self, model_name: str = "nomic-embed-text"):
+    def __init__(self, model_name: str = Settings().EMBEDDING_MODEL):
         self.model_name = model_name
 
     def generate_embeddings(self, texts: List[str]) -> List[List[float]]:

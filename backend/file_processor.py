@@ -3,8 +3,11 @@ from pathlib import Path
 from typing import Optional
 import pypdf
 from docx import Document
+from config import Settings
 
 class FileProcessor:
+    """Class to handle file processing and text extraction."""
+    settings = Settings()
 
     @staticmethod
     def extract_text_from_pdf(file_path: str) -> Optional[str]:
@@ -19,8 +22,8 @@ class FileProcessor:
         except Exception as e:
             print(f"Error extracting text from PDF: {e}")
             return None
-        
-    @staticmethod
+
+    @staticmethod 
     def extract_text_from_docx(file_path: str) -> Optional[str]:
         """Extract text from a DOCX file."""
         try:
@@ -58,7 +61,7 @@ class FileProcessor:
             return None
     
     @staticmethod
-    def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> list:
+    def chunk_text(text: str, chunk_size: int = settings.CHUNK_SIZE, overlap: int = settings.CHUNK_OVERLAP) -> list:
         """Chunk text into smaller pieces."""
         chunks = []
         start = 0
