@@ -21,6 +21,19 @@ class FileProcessor:
             return None
         
     @staticmethod
+    def extract_text_from_docx(file_path: str) -> Optional[str]:
+        """Extract text from a DOCX file."""
+        try:
+            doc = Document(file_path)
+            text = []
+            for paragraph in doc.paragraphs:
+                text.append(paragraph.text)
+            return "\n".join(text)
+        except Exception as e:
+            print(f"Error extracting text from DOCX: {e}")
+            return None
+        
+    @staticmethod
     def process_file(file_path: str) -> Optional[str]:
         """Process a file and extract its text based on the file type."""
         extension = Path(file_path).suffix.lower()
