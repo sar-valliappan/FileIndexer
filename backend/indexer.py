@@ -1,6 +1,7 @@
 import hashlib
 from pathlib import Path
 from typing import Callable
+from datetime import datetime
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
@@ -39,4 +40,45 @@ class Indexer:
         with open(file_path, 'rb') as f:
             file_hash = hashlib.sha256(f.read()).hexdigest()
         
-        return file_hash            
+        return file_hash
+
+    def index_files(self, file_paths: list[Path]):
+        try: 
+            for i, file_path in enumerate(file_paths):
+                if self.progress_callback:
+                    self.progress_callback(f"Indexing {file_path}", i, len(file_paths))
+                
+                file_text = self.file_processor.process_file(file_path)
+                chunks = self.file_processor.chunk_text(file_text)
+                embeddings = self.generate_embedding.generate_embeddings(chunks)            
+                
+                file_hash = self.get_file_hash(file_path)
+                modified_time = datetime.fromtimestamp(file_path.stat().st_mtime)
+
+                metadatas = [{
+                    "file_name": file_path.name,
+                    "file_extension": file_path.suffix,
+                    "file_path": str(file_path),
+                    "file_hash": file_hash,
+                    "file_size": file_path.stat().st_size,
+                    "modified_time": modified_time.isoformat(),
+                    "total_chunks": len(chunks),
+                    "chunk_index": i
+                } for i in range(len(chunks))]
+
+                ids = [f"{file_path}_{i}" for i in range(len(chunks))]
+
+                self.collection.add(
+                    documents=chunks,
+                    metadatas=metadatas,
+                    embeddings=embeddings,
+                    ids=ids
+                )
+
+        except Exception as e:
+            print(f"Error indexing files: {e}")
+    
+    def index_directory(self, directory_path: str):
+        """Scan and index all files in a directory."""
+        file_paths = self.scan_directory(directory_path)
+        self.index_files(file_paths)
