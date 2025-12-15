@@ -7,6 +7,20 @@ from docx import Document
 class FileProcessor:
 
     @staticmethod
+    def extract_text_from_pdf(file_path: str) -> Optional[str]:
+        """Extract text from a PDF file."""
+        try:
+            with open(file_path, 'rb') as file:
+                reader = pypdf.PdfReader(file)
+                text = []
+                for page in reader.pages:
+                    text.append(page.extract_text())
+                return "\n".join(text)
+        except Exception as e:
+            print(f"Error extracting text from PDF: {e}")
+            return None
+        
+    @staticmethod
     def process_file(file_path: str) -> Optional[str]:
         """Process a file and extract its text based on the file type."""
         extension = Path(file_path).suffix.lower()
