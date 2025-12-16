@@ -82,3 +82,25 @@ class Indexer:
         """Scan and index all files in a directory."""
         file_paths = self.scan_directory(directory_path)
         self.index_files(file_paths)
+
+    def search(self, query: str, n_results: int = settings.SEARCH_RESULT_COUNT):
+        """Search the collection for a given query."""
+        query_embeddings = self.generate_embedding.embed_query(query)
+        
+        results = self.collection.query(
+            query_embeddings=query_embeddings,
+            n_results=n_results
+        )
+        
+        formatted_results = []
+        if results['ids']:
+            for i in range(len(results['ids'][0])):
+                formatted_results.append({
+                    "file_path": results['metadatas'][0][i]['file_path'],
+                    "chunk_text": results['documents'][0][i][:300] + "...",
+                    "distance": results['distances'][0][i] if 'distances' in results else None,
+                    "metadata": results['metadatas'][0][i]
+                })
+        
+        return formatted_results
+    

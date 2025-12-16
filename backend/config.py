@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 200
     MAX_FILE_SIZE_MB: int = 100
 
+    # Query settings
+    SEARCH_RESULT_COUNT: int = 5
     
     # Collection name in ChromaDB
     COLLECTION_NAME: str = "file_embeddings"
