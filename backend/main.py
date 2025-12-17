@@ -34,3 +34,32 @@ def index_directory_task(directory: str):
         indexing_status["last_result"] = {"error": str(e)}
     finally:
         indexing_status["is_indexing"] = False
+
+@app.get("/")
+async def root():
+    """API root endpoint"""
+    return {
+        "message": "AI File Search API",
+        "version": "1.0.0",
+        "status": "running"
+}
+
+@app.post("/api/index")
+async def start_indexing(directory: str, background_tasks: BackgroundTasks):
+    """Start indexing files in the specified directory"""
+    if indexing_status["is_indexing"]:
+        raise HTTPException(status_code=400, detail="Indexing already in progress")
+    
+    background_tasks.add_task(index_directory_task, directory)
+    return {"message": f"Started indexing directory: {directory}"}
+
+@app.get("/api/index/status")
+async def get_indexing_status():
+    """Get indexing status"""
+    return indexing_status
+
+@app.post("/api/search")
+async def search_files(query: str, n_results: int = settings.SEARCH_RESULT_COUNT):
+    """Search indexed files for the given query"""
+    results = indexer.search(query, n_results)
+    return {"query": query, "results": results, "count": len(results)}
