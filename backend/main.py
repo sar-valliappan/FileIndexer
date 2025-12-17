@@ -1,11 +1,11 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 
-from indexer import FileIndexer
+from indexer import Indexer
 from config import settings
 
 app = FastAPI(title="File Indexer API")
 
-indexer = FileIndexer()
+indexer = Indexer()
 
 indexing_status = {
     "is_indexing": False,
@@ -63,3 +63,7 @@ async def search_files(query: str, n_results: int = settings.SEARCH_RESULT_COUNT
     """Search indexed files for the given query"""
     results = indexer.search(query, n_results)
     return {"query": query, "results": results, "count": len(results)}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
