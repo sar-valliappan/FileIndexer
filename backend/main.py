@@ -1,5 +1,8 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 
+import subprocess
+import platform
+
 from indexer import Indexer
 from config import settings
 
@@ -63,6 +66,22 @@ async def search_files(query: str, n_results: int = settings.SEARCH_RESULT_COUNT
     """Search indexed files for the given query"""
     results = indexer.search(query, n_results)
     return {"query": query, "results": results, "count": len(results)}
+
+@app.post("/api/open-file")
+async def open_file(file_path: str):
+    """Open a file in the default application"""
+    try:
+        system = platform.system()
+        if system == "Darwin":  # macOS
+            subprocess.run(["open", file_path])
+        elif system == "Windows":
+            subprocess.run(["start", file_path], shell=True)
+        elif system == "Linux":
+            subprocess.run(["xdg-open", file_path])
+        
+        return {"message": "File opened", "file_path": file_path}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to open file: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

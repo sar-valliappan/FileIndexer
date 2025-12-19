@@ -26,3 +26,10 @@ export const searchFiles = async (query, nResults = 10) => {
   });
   return response.data;
 };
+
+export const openFile = async (filePath) => {
+  const response = await api.post('/api/open-file', null, {
+    params: { file_path: filePath },
+  });
+  return response.data;
+};
