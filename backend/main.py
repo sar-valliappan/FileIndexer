@@ -1,5 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
 
 
 import subprocess
@@ -27,6 +29,14 @@ indexing_status = {
     "total": 0,
     "last_result": None
 }
+
+class IndexRequest(BaseModel):
+    directory: str
+
+class SearchRequest(BaseModel):
+    query: str
+    n_results: Optional[int] = settings.SEARCH_RESULT_COUNT
+
 
 def progress_callback(file_path: str, current: int, total: int):
     """Update indexing progress"""
@@ -58,8 +68,10 @@ async def root():
 }
 
 @app.post("/api/index")
-async def start_indexing(directory: str, background_tasks: BackgroundTasks):
+async def start_indexing(request: IndexRequest, background_tasks: BackgroundTasks):
     """Start indexing files in the specified directory"""
+    directory = request.directory
+
     if indexing_status["is_indexing"]:
         raise HTTPException(status_code=400, detail="Indexing already in progress")
     
@@ -72,8 +84,11 @@ async def get_indexing_status():
     return indexing_status
 
 @app.post("/api/search")
-async def search_files(query: str, n_results: int = settings.SEARCH_RESULT_COUNT):
+async def search_files(request: SearchRequest):
     """Search indexed files for the given query"""
+    query = request.query
+    n_results = request.n_results
+    
     results = indexer.search(query, n_results)
     return {"query": query, "results": results, "count": len(results)}
 
