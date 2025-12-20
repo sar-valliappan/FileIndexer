@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 200
     MAX_FILE_SIZE_MB: int = 100
 
+    # Valid file extensions for indexing
+    VALID_FILE_EXTENSIONS: list[str] = [
+        ".txt", ".pdf", ".docx"
+    ]
+
+
     # Query settings
     SEARCH_RESULT_COUNT: int = 5
     

@@ -32,8 +32,11 @@ class Indexer:
     def scan_directory(self, directory_path: str):
         """Scan a directory for files and index them."""
         directory = Path(directory_path)
-        files = list(directory.rglob('*.*'))
-        
+        files = []
+        for ext in self.settings.VALID_FILE_EXTENSIONS:
+            files.extend(directory.glob(f'*{ext}'))
+
+        print(f"Found {len(files)} files to index.")
         return files
     
     def get_file_hash(self, file_path: Path):
@@ -49,8 +52,11 @@ class Indexer:
                     self.progress_callback(f"Indexing {file_path}", i, len(file_paths))
                 
                 file_text = self.file_processor.process_file(file_path)
+                if (file_text is None) or (len(file_text.strip()) == 0):
+                    continue
+
                 chunks = self.file_processor.chunk_text(file_text)
-                embeddings = self.generate_embedding.generate_embeddings(chunks)            
+                embeddings = self.generate_embedding.generate_embeddings(chunks)       
                 
                 file_hash = self.get_file_hash(file_path)
                 modified_time = datetime.fromtimestamp(file_path.stat().st_mtime)
