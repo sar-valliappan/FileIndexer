@@ -1,3 +1,4 @@
+from math import ceil
 import os
 from pathlib import Path
 from typing import Optional
@@ -69,6 +70,10 @@ class FileProcessor:
 
         if (text_length <= chunk_size):
             return [text]
+
+        num_chunks = ceil((text_length - overlap) / (chunk_size - overlap))
+        chunk_size = ceil(text_length / num_chunks) + overlap
+
         
         while start < text_length:
             end = min(start + chunk_size, text_length)
