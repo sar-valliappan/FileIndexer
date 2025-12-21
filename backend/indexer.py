@@ -130,7 +130,10 @@ class Indexer:
             
             aggregated_results = []
             for file_path, data in file_results.items():
-                best_similarity = data['best_similarity']
+                similarities = data['similarities']
+                similarities.sort(reverse=True)
+                k = min(3, len(similarities))
+                best_similarity = sum(similarities[:k]) / k
 
                 aggregated_results.append({
                     'file_path': file_path,
