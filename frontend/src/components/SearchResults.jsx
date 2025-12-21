@@ -14,15 +14,30 @@ const SearchResult = ({ result, index }) => {
     }
   };
 
-  // Calculate relevance color
-  const getRelevanceColor = (distance) => {
-    if (!distance) return 'bg-green-100 text-green-800';
-    if (distance < 0.3) return 'bg-green-100 text-green-800';
-    if (distance < 0.5) return 'bg-yellow-100 text-yellow-800';
+  // Calculate relevance color based on similarity score
+  const getRelevanceColor = (similarity) => {
+    if (!similarity && similarity !== 0) {
+      // Fallback for distance-based (old format)
+      const distance = result.distance || 0;
+      if (distance < 0.3) return 'bg-green-100 text-green-800';
+      if (distance < 0.5) return 'bg-yellow-100 text-yellow-800';
+      return 'bg-orange-100 text-orange-800';
+    }
+    
+    // Similarity-based (new format, 0-1 where 1 is perfect)
+    if (similarity > 0.7) return 'bg-green-100 text-green-800';
+    if (similarity > 0.5) return 'bg-yellow-100 text-yellow-800';
     return 'bg-orange-100 text-orange-800';
   };
 
-  const relevanceClass = getRelevanceColor(result.distance);
+  const relevanceClass = getRelevanceColor(result.similarity);
+  
+  // Format match percentage
+  const matchPercentage = result.similarity 
+    ? `${Math.round(result.similarity * 100)}%`
+    : result.distance 
+    ? `${Math.round((1 - result.distance) * 100)}%`
+    : 'N/A';
 
   return (
     <div className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow border border-gray-200">
@@ -39,7 +54,7 @@ const SearchResult = ({ result, index }) => {
           </div>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${relevanceClass}`}>
-          {result.distance ? `${(1 - result.distance).toFixed(2)}` : 'High'} Match
+          {matchPercentage} Match
         </span>
       </div>
 
@@ -53,7 +68,11 @@ const SearchResult = ({ result, index }) => {
       {/* Metadata */}
       <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
         <span>
-          Chunk {result.metadata.chunk_index + 1} of {result.metadata.total_chunks}
+          {result.matching_chunks 
+            ? `${result.matching_chunks}/${result.total_chunks} chunks match` +
+              (result.match_percentage ? ` (${Math.round(result.match_percentage * 100)}% of file)` : '')
+            : `Chunk ${result.metadata.chunk_index + 1} of ${result.metadata.total_chunks}`
+          }
         </span>
         <span>
           {(result.metadata.file_size / 1024).toFixed(1)} KB
@@ -92,7 +111,7 @@ const SearchResults = ({ results, query }) => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-white-800 mb-4">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">
         Found {results.length} result{results.length !== 1 ? 's' : ''} for "{query}"
       </h2>
       {results.map((result, index) => (

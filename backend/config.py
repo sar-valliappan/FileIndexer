@@ -22,7 +22,6 @@ class Settings(BaseSettings):
         ".txt", ".pdf", ".docx"
     ]
 
-
     # Query settings
     SEARCH_RESULT_COUNT: int = 5
     

@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-from typing import Callable
+from typing import List, Dict, Callable
 from datetime import datetime
 
 import chromadb
@@ -80,6 +80,7 @@ class Indexer:
                     embeddings=embeddings,
                     ids=ids
                 )
+                print(f"Indexed {file_path} with {len(chunks)} chunks.")
 
         except Exception as e:
             print(f"Error indexing files: {e}")
@@ -89,24 +90,62 @@ class Indexer:
         file_paths = self.scan_directory(directory_path)
         self.index_files(file_paths)
 
-    def search(self, query: str, n_results: int = settings.SEARCH_RESULT_COUNT):
-        """Search the collection for a given query."""
-        query_embeddings = self.generate_embedding.embed_query(query)
-        
-        results = self.collection.query(
-            query_embeddings=query_embeddings,
-            n_results=n_results
-        )
-        
-        formatted_results = []
-        if results['ids']:
-            for i in range(len(results['ids'][0])):
-                formatted_results.append({
-                    "file_path": results['metadatas'][0][i]['file_path'],
-                    "chunk_text": results['documents'][0][i][:300] + "...",
-                    "distance": results['distances'][0][i] if 'distances' in results else None,
-                    "metadata": results['metadatas'][0][i]
+    def search(self, query: str, n_results: int = settings.SEARCH_RESULT_COUNT) -> List[Dict]:
+        """Search for files matching the query with file-level aggregation"""
+        try:
+            query_embedding = self.generate_embedding.embed_query(query)
+            
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results * 5,
+                include=["documents", "metadatas", "distances"]
+            )
+            
+            file_results = {}
+            
+            if results['ids']:
+                for i in range(len(results['ids'][0])):
+                    file_path = results['metadatas'][0][i]['file_path']
+                    chunk_text = results['documents'][0][i]
+                    distance = results['distances'][0][i] if 'distances' in results else RuntimeError("Chroma query did not return distances")
+                    similarity = 1 - distance
+                    metadata = results['metadatas'][0][i]
+                    
+                    if file_path not in file_results:
+                        file_results[file_path] = {
+                            'file_path': file_path,
+                            'chunks': [],
+                            'similarities': [],
+                            'best_chunk': chunk_text,
+                            'best_similarity': similarity,
+                            'metadata': metadata
+                        }
+                    
+                    file_results[file_path]['chunks'].append(chunk_text)
+                    file_results[file_path]['similarities'].append(similarity)
+                    
+                    if similarity > file_results[file_path]['best_similarity']:
+                        file_results[file_path]['best_chunk'] = chunk_text
+                        file_results[file_path]['best_similarity'] = similarity
+            
+            aggregated_results = []
+            for file_path, data in file_results.items():
+                best_similarity = data['best_similarity']
+
+                aggregated_results.append({
+                    'file_path': file_path,
+                    'chunk_text': data['best_chunk'][:300] + "...",
+                    'similarity': best_similarity,
+                    'distance': 1 - best_similarity,
+                    'chunks': data['chunks'],
+                    'total_chunks': len(data['chunks']),
+                    'metadata': data['metadata']
                 })
-        
-        return formatted_results
-    
+            
+            aggregated_results.sort(key=lambda x: x['similarity'], reverse=True)
+            
+            return aggregated_results[:n_results]
+            
+        except Exception as e:
+            print(f"Search error: {e}")
+            return []
