@@ -5,6 +5,9 @@ original_test_files/
 # .DS_Store
 .DS_Store
 
+# chromaDB
+chroma_db/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import SearchBar from '@/components/SearchBar';
-// import SearchResults from '@/components/SearchResults';
-// import IndexingPanel from '@/components/IndexingPanel';
-import { searchFiles, checkHealth } from '@/lib/api';
+import SearchResults from '@/components/SearchResults';
+import IndexingPanel from '@/components/IndexingPanel';
+import { searchFiles } from '@/lib/api';
 
 export default function Home() {
   const [results, setResults] = useState([]);
@@ -12,19 +12,6 @@ export default function Home() {
   const [currentQuery, setCurrentQuery] = useState('');
   const [showIndexing, setShowIndexing] = useState(false);
   const [backendStatus, setBackendStatus] = useState('checking');
-
-  // Check backend health on mount
-  useEffect(() => {
-    const checkBackend = async () => {
-      try {
-        await checkHealth();
-        setBackendStatus('connected');
-      } catch (err) {
-        setBackendStatus('disconnected');
-      }
-    };
-    checkBackend();
-  }, []);
 
   const handleSearch = async (query) => {
     setIsSearching(true);
@@ -57,20 +44,6 @@ export default function Home() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              {/* Backend Status */}
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  backendStatus === 'connected' ? 'bg-green-500' : 
-                  backendStatus === 'disconnected' ? 'bg-red-500' : 
-                  'bg-yellow-500'
-                }`} />
-                <span className="text-sm text-gray-600">
-                  {backendStatus === 'connected' ? 'Connected' : 
-                   backendStatus === 'disconnected' ? 'Disconnected' : 
-                   'Checking...'}
-                </span>
-              </div>
-              
               {/* Toggle Indexing Panel */}
               <button
                 onClick={() => setShowIndexing(!showIndexing)}
@@ -102,7 +75,7 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              //<SearchResults results={results} query={currentQuery} />
+              <SearchResults results={results} query={currentQuery} />
             )}
           </div>
 
