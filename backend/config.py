@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # Valid file extensions for indexing
     VALID_FILE_EXTENSIONS: list[str] = [
-        ".txt", ".pdf", ".docx"
+        ".txt", ".pdf", ".docx", ".md"
     ]
 
     # Query settings

@@ -45,6 +45,7 @@ I wanted to demonstrate the following skills while also solving a personal probl
 **Document Processing**
 - pypdf for PDF text extraction
 - python-docx for Word document parsing
+- python-pptx for Powerpoint parsing
 - Multi-encoding support for text files (UTF-8, Latin-1, CP1252)
 
 ### Frontend Technology Stack
@@ -69,8 +70,8 @@ I wanted to demonstrate the following skills while also solving a personal probl
 
 **Multi-Format Support**
 ```python
-# Supports: .txt, .pdf, .docx (More to be added soon!)
-supported_formats = ['.txt', '.pdf', '.docx']
+# Supports: .txt, .pdf, .docx, .md, .pptx (More to be added soon!)
+supported_formats = ['.txt', '.pdf', '.docx', '.md', '.pptx']
 ```
 
 **Smart Text Chunking**
@@ -283,7 +284,7 @@ ai-file-search/
 ## Future Enhancements
 
 ### Planned Features
-- **Additional file support**: Index other types of files, including .md and .py
+- **Image support**: Index images into the database
 - **Improved re-indexing**: Only index changed files, rather than the entire directory
 - **Better scoring algorithm**: Add a second layer of sorting to supplement the embedding distance scoring algorithm
 - **Advanced filters**: Filter by file type, date range, or location
@@ -307,22 +308,11 @@ This is a portfolio project, but I'm open to suggestions! If you find bugs or ha
 3. Create a feature branch
 4. Submit a pull request with clear description
 
-## License
-
-MIT License - feel free to use this project as a foundation for your own semantic search applications.
-
-## Acknowledgments
-
-- **Ollama**: For making local LLM deployment accessible
-- **ChromaDB**: For the excellent vector database
-- **FastAPI**: For the modern Python API framework
-- **Next.js**: For the powerful React framework
-
 ## Contact
 
 Created by Saravanan Natarajan Valliappan
-- LinkedIn: [linkedin.com/in/saravanan-valliappan
-- GitHub: [@sar-valliappan]
+- LinkedIn: linkedin.com/in/saravanan-valliappan
+- GitHub: @sar-valliappan
 
 ---
 

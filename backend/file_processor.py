@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import Optional
 import pypdf
 from docx import Document
+from pptx import Presentation
+
 from config import Settings
 
 class FileProcessor:
@@ -36,15 +38,30 @@ class FileProcessor:
         except Exception as e:
             print(f"Error extracting text from DOCX: {e}")
             return None
-        
+    
     @staticmethod
-    def extract_text_from_txt(file_path: str) -> Optional[str]:
-        """Extract text from a TXT file."""
+    def extract_text_from_pptx(file_path: str) -> Optional[str]:
+        """Extract text from a PPTX file."""
+        try:
+            prs = Presentation(file_path)
+            text = []
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text"):
+                        text.append(shape.text)
+            return "\n".join(text)
+        except Exception as e:
+            print(f"Error extracting text from PPTX: {e}")
+            return None
+    
+    @staticmethod
+    def extract_text(file_path: str) -> Optional[str]:
+        """Extract text from a TXT or MD file."""
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 return file.read()
         except Exception as e:
-            print(f"Error extracting text from TXT: {e}")
+            print(f"Error extracting text from TXT or MD: {e}")
             return None
 
     @staticmethod
@@ -55,8 +72,12 @@ class FileProcessor:
             return FileProcessor.extract_text_from_pdf(file_path)
         elif extension == '.docx':
             return FileProcessor.extract_text_from_docx(file_path)
+        elif extension == '.pptx':
+            return FileProcessor.extract_text_from_pptx(file_path)
         elif extension == '.txt':
-            return FileProcessor.extract_text_from_txt(file_path)
+            return FileProcessor.extract_text(file_path)
+        elif extension == '.md':
+            return FileProcessor.extract_text(file_path)
         else:
             print(f"Unsupported file type: {extension}")
             return None
