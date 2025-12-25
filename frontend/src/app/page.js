@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import SearchBar from '@/components/SearchBar';
 import SearchResults from '@/components/SearchResults';
 import IndexingPanel from '@/components/IndexingPanel';
+import FileListPanel from '@/components/FileListPanel';
 import { searchFiles } from '@/lib/api';
 
 export default function Home() {
@@ -11,7 +12,7 @@ export default function Home() {
   const [isSearching, setIsSearching] = useState(false);
   const [currentQuery, setCurrentQuery] = useState('');
   const [showIndexing, setShowIndexing] = useState(false);
-  const [backendStatus, setBackendStatus] = useState('checking');
+  const [showFileList, setShowFileList] = useState(false);
 
   const handleSearch = async (query) => {
     setIsSearching(true);
@@ -51,6 +52,14 @@ export default function Home() {
               >
                 {showIndexing ? 'Hide' : 'Show'} Indexing
               </button>
+
+              {/* Toggle File List */}
+              <button
+                onClick={() => setShowFileList(!showFileList)}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                {showFileList ? 'Hide' : 'View'} Files
+              </button>
             </div>
           </div>
         </div>
@@ -82,6 +91,7 @@ export default function Home() {
           {/* Right Column - Indexing Panel */}
           <div className="lg:col-span-1">
             {showIndexing && <IndexingPanel />}
+            {showFileList && <FileListPanel />}
             
             {/* Info Card */}
             {!showIndexing && (

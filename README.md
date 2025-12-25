@@ -83,6 +83,9 @@ supported_formats = ['.txt', '.pdf', '.docx', '.md', '.pptx']
 **Metadata Tracking**
 - File path, size, extension, and modification time
 - Chunk index and total chunks per file
+
+**Efficient Re-Indexing**
+- Only new and changed files are indexed
 - File hash for change detection and incremental updates
 
 ### 2. Semantic Search Engine
@@ -107,6 +110,10 @@ supported_formats = ['.txt', '.pdf', '.docx', '.md', '.pptx']
 - One-click file opening in default application
 - Copy-to-clipboard for file paths
 
+**Indexed Files Display**
+- All indexed files shown, with individual and total file size
+- Sortable by name, file size, and date modified for easy access
+
 ### 4. Background Indexing System
 
 **Async Processing**
@@ -117,7 +124,6 @@ supported_formats = ['.txt', '.pdf', '.docx', '.md', '.pptx']
 **Incremental Updates**
 - File hash comparison for change detection
 - Selective re-indexing of modified files
-- Batch processing for efficiency
 
 ## Installation and Setup
 
@@ -197,11 +203,6 @@ npm run dev
 - Combines chunk similarity, coverage, and diversity
 - Higher percentage = more relevant document
 
-**Color Coding**:
-- 🟢 Green: Highly relevant (>70%)
-- 🟡 Yellow: Moderately relevant (50-70%)
-- 🟠 Orange: Somewhat relevant (<50%)
-
 ## Project Structure
 
 ```
@@ -243,11 +244,10 @@ ai-file-search/
 ### Full-Stack Development
 - **Backend**: FastAPI, async Python, RESTful API design
 - **Frontend**: Next.js, React, modern JavaScript/JSX
-- **Database**: Vector database management, query optimization
+- **Database**: ChromaDB
 
-### AI/ML Engineering
-- **Embeddings**: Understanding and implementing vector representations
-- **Semantic Search**: Building retrieval systems with similarity metrics
+### AI/ML
+- **Embeddings**: Understanding vector representations
 - **Model Integration**: Working with local LLMs (Ollama)
 
 ### System Design
@@ -298,9 +298,7 @@ ai-file-search/
 - **Drag-and-drop**: Visual directory selection
 - **Progress visualization**: Real-time indexing statistics
 
-Created by Saravanan Natarajan Valliappan
-- LinkedIn: linkedin.com/in/saravanan-valliappan
-
 ---
 
-**Built with**: Python, FastAPI, Next.js, React, ChromaDB, Ollama
+Created by Saravanan Natarajan Valliappan
+- LinkedIn: linkedin.com/in/saravanan-valliappan

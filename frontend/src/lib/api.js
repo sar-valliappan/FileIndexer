@@ -33,3 +33,8 @@ export const openFile = async (filePath) => {
   });
   return response.data;
 };
+
+export const getIndexedFiles = async () => {
+  const response = await api.get('/api/files');
+  return response.data;
+};

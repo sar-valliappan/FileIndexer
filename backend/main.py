@@ -107,6 +107,40 @@ async def open_file(file_path: str):
         return {"message": "File opened", "file_path": file_path}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to open file: {str(e)}")
+    
+@app.get("/api/files")
+async def get_indexed_files():
+    """Get all indexed files with their metadata"""
+    try:
+        results = indexer.collection.get(
+            include=["metadatas"]
+        )
+        
+        if not results or not results['metadatas']:
+            return {"files": [], "count": 0}
+        
+        files_dict = {}
+        for metadata in results['metadatas']:
+            file_path = metadata['file_path']
+            if file_path not in files_dict:
+                files_dict[file_path] = {
+                    'file_path': file_path,
+                    'file_name': metadata['file_name'],
+                    'file_extension': metadata['file_extension'],
+                    'file_size': metadata['file_size'],
+                    'total_chunks': metadata['total_chunks'],
+                    'modified_time': metadata['modified_time']
+                }
+        
+        files_list = sorted(files_dict.values(), key=lambda x: x['file_name'])
+        
+        return {
+            "files": files_list,
+            "count": len(files_list)
+        }
+    except Exception as e:
+        print(f"Error getting files: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
