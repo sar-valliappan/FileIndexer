@@ -179,7 +179,6 @@ npm run dev
 2. Click "Show Indexing" in the top-right corner
 3. Enter an absolute directory path (e.g., `/Users/yourname/Documents`)
 4. Click "Start" to begin background indexing
-5. Indexing progress shows in the panel
 
 ### 2. Search Your Files
 
@@ -271,6 +270,7 @@ ai-file-search/
 ### Indexing Speed
 - **~40ms per chunk**
 - Background tasks prevent UI blocking
+- Only changed files are indexed instead of the entire directory
 
 ### Search Speed
 - **<1 second** for typical queries
@@ -285,7 +285,6 @@ ai-file-search/
 
 ### Planned Features
 - **Image support**: Index images into the database
-- **Improved re-indexing**: Only index changed files, rather than the entire directory
 - **Better scoring algorithm**: Add a second layer of sorting to supplement the embedding distance scoring algorithm
 - **Advanced filters**: Filter by file type, date range, or location
 - **Search history**: Track and revisit previous queries
@@ -299,20 +298,8 @@ ai-file-search/
 - **Drag-and-drop**: Visual directory selection
 - **Progress visualization**: Real-time indexing statistics
 
-## Contributing
-
-This is a portfolio project, but I'm open to suggestions! If you find bugs or have ideas:
-
-1. Open an issue describing the problem/enhancement
-2. Fork the repository
-3. Create a feature branch
-4. Submit a pull request with clear description
-
-## Contact
-
 Created by Saravanan Natarajan Valliappan
 - LinkedIn: linkedin.com/in/saravanan-valliappan
-- GitHub: @sar-valliappan
 
 ---
 

@@ -41,19 +41,48 @@ class Indexer:
     
     def get_file_hash(self, file_path: Path):
         with open(file_path, 'rb') as f:
-            file_hash = hashlib.sha256(f.read()).hexdigest()
+            file_hash = hashlib.sha256(self.file_processor.process_file(file_path).encode()).hexdigest()
         
         return file_hash
+    
+    def get_indexed_files(self) -> Dict[str, str]:
+        """Return {file_path: file_hash} for already-indexed files."""
+        results = self.collection.get(include=["metadatas"])
+        
+        indexed = {}
+        for md in results.get("metadatas", []):
+            indexed[md["file_path"]] = md["file_hash"]
+        
+        return indexed
 
     def index_files(self, file_paths: list[Path]):
         try: 
+            indexed_files = self.get_indexed_files()
+            files = {str(p): p for p in file_paths}
+
+            for indexed_path in indexed_files:
+                if indexed_path not in files:
+                    self.collection.delete(
+                        where={"file_path": {"$eq": indexed_path}}
+                    )
+
             for i, file_path in enumerate(file_paths):
                 if self.progress_callback:
                     self.progress_callback(f"Indexing {file_path}", i, len(file_paths))
                 
                 file_text = self.file_processor.process_file(file_path)
+                file_hash = self.get_file_hash(file_path)
+
                 if (file_text is None) or (len(file_text.strip()) == 0):
                     continue
+
+                if str(file_path) in indexed_files and indexed_files[str(file_path)] == file_hash:
+                    continue
+
+                if str(file_path) in indexed_files:
+                    self.collection.delete(
+                        where={"file_path": {"$eq": file_path}}
+                    )
 
                 chunks = self.file_processor.chunk_text(file_text)
                 embeddings = self.generate_embedding.generate_embeddings(chunks)       
@@ -61,18 +90,20 @@ class Indexer:
                 file_hash = self.get_file_hash(file_path)
                 modified_time = datetime.fromtimestamp(file_path.stat().st_mtime)
 
-                metadatas = [{
-                    "file_name": file_path.name,
-                    "file_extension": file_path.suffix,
-                    "file_path": str(file_path),
-                    "file_hash": file_hash,
-                    "file_size": file_path.stat().st_size,
-                    "modified_time": modified_time.isoformat(),
-                    "total_chunks": len(chunks),
-                    "chunk_index": i
-                } for i in range(len(chunks))]
-
-                ids = [f"{file_path}_{i}" for i in range(len(chunks))]
+                metadatas = []
+                ids = []
+                for chunk_idx in range(len(chunks)):
+                    metadatas.append({
+                        "file_name": file_path.name,
+                        "file_extension": file_path.suffix,
+                        "file_path": str(file_path),
+                        "file_hash": file_hash,
+                        "file_size": file_path.stat().st_size,
+                        "modified_time": modified_time.isoformat(),
+                        "total_chunks": len(chunks),
+                        "chunk_index": chunk_idx
+                    }) 
+                    ids.append(f"{file_path}_{chunk_idx}")
 
                 self.collection.add(
                     documents=chunks,
