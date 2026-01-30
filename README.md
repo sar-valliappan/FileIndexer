@@ -1,4 +1,3 @@
-
 # AI File Search
 
 A semantic search engine for local files powered by AI embeddings, enabling natural language queries across your document collection without relying on external APIs or cloud services.
@@ -127,55 +126,47 @@ supported_formats = ['.txt', '.pdf', '.docx', '.md', '.pptx']
 
 ## Installation and Setup
 
-### Prerequisites
-
-- Python 3.11+
-- Node.js 18+
-- Ollama installed and running
-
 ### Backend Setup
+#### Mac: 
+```bash
+# 1. Clone the repository
+git clone https://github.com/sar-valliappan/FileIndexer.git
+cd FileIndexer
+
+# 2. Run the automated installer (installs all dependencies)
+chmod +x install.sh
+./install.sh
+
+# 3. Create the Mac App
+chmod +x create-launcher.sh
+./create-launcher.sh
+```
+Now click on the FileIndexer.app on your Desktop. Your browser will automatically open to localhost:3000.
+
+#### Other:
 
 ```bash
-# Install Ollama
-brew install ollama
+# 1. Clone the repository
+git clone https://github.com/sar-valliappan/FileIndexer.git
+cd FileIndexer
 
-# Start Ollama service
-ollama serve
+# 2. Run the automated installer (installs all dependencies)
+chmod +x install.sh
+./install.sh
 
-# Pull embedding model
-ollama pull nomic-embed-text
-
-# Navigate to backend
-cd backend
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run backend
-python main.py
-# Server runs on http://localhost:8000
+# 3. Start FileIndexer
+./start-fileindexer.sh
 ```
+Your server is running on localhost:3000.
 
-### Frontend Setup (separate terminal)
+The install.sh script automatically installs:
 
-```bash
-# Navigate to frontend
-cd frontend
-
-# Install dependencies
-npm install
-
-# Create environment file
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
-
-# Run development server
-npm run dev
-# App runs on http://localhost:3000
-```
+Homebrew (if needed)
+Python 3.11+
+Node.js 18+
+Ollama
+All Python and Node.js dependencies
+AI embedding model (nomic-embed-text)
 
 ## Usage
 
@@ -234,6 +225,10 @@ ai-file-search/
 │   └── next.config.mjs
 ├── data/
 │   └── chroma_db/             # Vector database storage (gitignored)
+├── create-launcher.sh         # Creates Mac app
+├── install.sh                 # Installs required dependencies
+├── start-fileindexer.sh       # Starts frontend and backend
+├── stop-fileindexer.sh        # Gracefully terminates the program
 ├── .gitignore
 └── README.md
 
