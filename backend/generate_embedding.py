@@ -8,11 +8,10 @@ class GenerateEmbedding:
 
     def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for a list of texts using the Ollama API."""
-        embeddingsList = []
-        for text in texts:
-            response = ollama.embed(model=self.model_name, input=text)
-            embeddingsList.append(response['embeddings'][0])
-        return embeddingsList
+        if not texts:
+            return []
+        response = ollama.embed(model=self.model_name, input=texts)
+        return response['embeddings']
     
     def embed_query(self, query: str) -> List[float]:
         """Generate an embedding for a single query string."""
