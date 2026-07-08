@@ -194,6 +194,35 @@ AI embedding model (nomic-embed-text)
 - Combines chunk similarity, coverage, and diversity
 - Higher percentage = more relevant document
 
+## Benchmarking
+
+The `backend/benchmarking/` directory contains scripts for measuring indexing performance against a real set of files, broken down by pipeline stage (extract, hash, chunk, embed, write to ChromaDB).
+
+### 1. Generate a text set (one-time)
+
+Downloads a sample of public-domain texts from Project Gutenberg to benchmark against:
+
+```bash
+cd backend/benchmarking
+python fetch_gutenberg_texts.py --count 500
+```
+
+Options: `--out-dir` (default: `gutenberg_texts/`), `--workers`, `--seed`, `--min-id`/`--max-id`.
+
+### 2. Run the benchmark
+
+```bash
+python benchmark.py --dir gutenberg_texts
+```
+
+Options:
+- `--num-files N` — limit to the first N matching files
+- `--note "description"` — label the run in the results log
+- `--no-log` — print results without appending to `benchmarks/results.csv`
+- `--verbose` — print per-file progress
+
+Each run prints a summary (time and throughput per stage) and appends a row to `benchmarks/results.csv`, regenerating `benchmarks/results.md` as a human-readable history table. Use `--note` to record what changed (e.g. `--note "batched embeddings"`) so runs are easy to compare over time.
+
 ## Project Structure
 
 ```
