@@ -1,6 +1,5 @@
 import argparse
 import csv
-import hashlib
 import subprocess
 import sys
 import tempfile
@@ -9,14 +8,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-import chromadb
-from chromadb.config import Settings as ChromaSettings
+BACKEND_DIR = Path(__file__).parent
+sys.path.insert(0, str(BACKEND_DIR.parent))
 
 from config import Settings
-from file_processor import FileProcessor
-from generate_embedding import GenerateEmbedding
+from indexer import Indexer
 
-BACKEND_DIR = Path(__file__).parent
 RESULTS_DIR = BACKEND_DIR / "benchmarks"
 RESULTS_CSV = RESULTS_DIR / "results.csv"
 RESULTS_MD = RESULTS_DIR / "results.md"
@@ -62,65 +59,92 @@ class StageTimes:
         return self.extract + self.hash + self.chunk + self.embed + self.db_add
 
 
-def run_benchmark(file_paths: list[Path], verbose: bool) -> dict:
-    processor = FileProcessor()
-    embedder = GenerateEmbedding()
+def instrument(indexer: Indexer, times: StageTimes, counts: dict, num_files: int, verbose: bool) -> None:
+    """Wrap the real Indexer's stage methods with timers, without changing its logic."""
+    state = {"path": None, "in_hash": False}
 
+    orig_process_file = indexer.file_processor.process_file
+
+    def timed_process_file(path, *a, **kw):
+        t0 = time.perf_counter()
+        result = orig_process_file(path, *a, **kw)
+        dt = time.perf_counter() - t0
+        if state["in_hash"]:
+            times.hash += dt
+        else:
+            times.extract += dt
+            state["path"] = path
+        return result
+
+    indexer.file_processor.process_file = timed_process_file
+
+    orig_get_file_hash = indexer.get_file_hash
+
+    def timed_get_file_hash(path, *a, **kw):
+        state["in_hash"] = True
+        try:
+            return orig_get_file_hash(path, *a, **kw)
+        finally:
+            state["in_hash"] = False
+
+    indexer.get_file_hash = timed_get_file_hash
+
+    orig_chunk_text = indexer.file_processor.chunk_text
+
+    def timed_chunk_text(text, *a, **kw):
+        t0 = time.perf_counter()
+        chunks = orig_chunk_text(text, *a, **kw)
+        times.chunk += time.perf_counter() - t0
+        counts["total_chunks"] += len(chunks)
+        counts["files_seen"] += 1
+        path = state["path"]
+        if path is not None:
+            counts["total_bytes"] += path.stat().st_size
+            if verbose:
+                print(f"  [{counts['files_seen']}/{num_files}] {path.name}: {len(chunks)} chunks")
+        return chunks
+
+    indexer.file_processor.chunk_text = timed_chunk_text
+
+    orig_generate_embeddings = indexer.generate_embedding.generate_embeddings
+
+    def timed_generate_embeddings(chunks, *a, **kw):
+        t0 = time.perf_counter()
+        result = orig_generate_embeddings(chunks, *a, **kw)
+        times.embed += time.perf_counter() - t0
+        return result
+
+    indexer.generate_embedding.generate_embeddings = timed_generate_embeddings
+
+    orig_add = indexer.collection.add
+
+    def timed_add(*a, **kw):
+        t0 = time.perf_counter()
+        result = orig_add(*a, **kw)
+        times.db_add += time.perf_counter() - t0
+        return result
+
+    indexer.collection.add = timed_add
+
+
+def run_benchmark(file_paths: list[Path], verbose: bool) -> dict:
     with tempfile.TemporaryDirectory() as tmp_str:
         chroma_dir = Path(tmp_str) / "chroma"
-        client = chromadb.PersistentClient(
-            path=str(chroma_dir), settings=ChromaSettings(anonymized_telemetry=False)
-        )
-        collection = client.get_or_create_collection(
-            name="benchmark", metadata={"hnsw:space": "cosine"}
-        )
+        indexer = Indexer(chroma_dir=str(chroma_dir), collection_name="benchmark")
 
         # Warm up the model so first-call load time doesn't skew results.
-        embedder.embed_query("warm up")
+        indexer.generate_embedding.embed_query("warm up")
 
         times = StageTimes()
-        total_chunks = 0
-        total_bytes = 0
+        counts = {"total_chunks": 0, "total_bytes": 0, "files_seen": 0}
+        instrument(indexer, times, counts, len(file_paths), verbose)
 
-        for i, path in enumerate(file_paths):
-            t0 = time.perf_counter()
-            text = processor.process_file(path)
-            t1 = time.perf_counter()
-            times.extract += t1 - t0
-
-            if not text or not text.strip():
-                continue
-
-            # Mirrors Indexer.get_file_hash, which re-extracts the file to hash it.
-            processor.process_file(path)
-            file_hash = hashlib.sha256(text.encode()).hexdigest()
-            t2 = time.perf_counter()
-            times.hash += t2 - t1
-
-            chunks = processor.chunk_text(text)
-            t3 = time.perf_counter()
-            times.chunk += t3 - t2
-
-            total_chunks += len(chunks)
-            total_bytes += path.stat().st_size
-
-            embeddings = embedder.generate_embeddings(chunks)
-            t4 = time.perf_counter()
-            times.embed += t4 - t3
-
-            ids = [f"{path}::{idx}::{file_hash}" for idx in range(len(chunks))]
-            metadatas = [{"file_path": str(path), "chunk_index": idx} for idx in range(len(chunks))]
-            collection.add(documents=chunks, embeddings=embeddings, metadatas=metadatas, ids=ids)
-            t5 = time.perf_counter()
-            times.db_add += t5 - t4
-
-            if verbose:
-                print(f"  [{i + 1}/{len(file_paths)}] {path.name}: {len(chunks)} chunks")
+        indexer.index_files(file_paths)
 
     return {
         "num_files": len(file_paths),
-        "total_bytes": total_bytes,
-        "total_chunks": total_chunks,
+        "total_bytes": counts["total_bytes"],
+        "total_chunks": counts["total_chunks"],
         "times": times,
     }
 

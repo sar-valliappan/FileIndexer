@@ -14,18 +14,23 @@ class Indexer:
     """Class to handle indexing of files into a ChromaDB collection."""
     settings = Settings()
 
-    def __init__(self, progress_callback: Callable[[str, int, int], None] = None):
+    def __init__(
+        self,
+        progress_callback: Callable[[str, int, int], None] = None,
+        chroma_dir: str = None,
+        collection_name: str = None,
+    ):
         self.generate_embedding = GenerateEmbedding()
         self.file_processor = FileProcessor()
         self.progress_callback = progress_callback
-        
+
         self.client = chromadb.PersistentClient(
-            path=str(self.settings.CHROMA_DB_DIR),
+            path=str(chroma_dir or self.settings.CHROMA_DB_DIR),
             settings=ChromaSettings(anonymized_telemetry=False)
         )
-        
+
         self.collection = self.client.get_or_create_collection(
-            name=self.settings.COLLECTION_NAME,
+            name=collection_name or self.settings.COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"}
         )
     
