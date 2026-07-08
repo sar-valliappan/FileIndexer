@@ -214,3 +214,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Benchmarking data
+backend/benchmarking/gutenberg_texts/
+backend/benchmarking/.gutenberg_raw_cache/
