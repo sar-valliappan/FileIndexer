@@ -200,7 +200,7 @@ The `backend/benchmarking/` directory contains scripts for measuring indexing pe
 
 ### 1. Generate a text set (one-time)
 
-Downloads a sample of public-domain texts from Project Gutenberg to benchmark against:
+Downloads a sample of public-domain texts from Project Gutenberg (.txt files) and DocBank (.pdf files) to benchmark against:
 
 ```bash
 cd backend/benchmarking
@@ -208,6 +208,13 @@ python fetch_gutenberg_texts.py --count 500
 ```
 
 Options: `--out-dir` (default: `gutenberg_texts/`), `--workers`, `--seed`, `--min-id`/`--max-id`.
+
+
+```bash
+python fetch_docbank_pdfs.py --count 100
+```
+
+Options: `--out-dir` (default: `docbank_pdfs/`), `--workers`.
 
 ### 2. Run the benchmark
 
