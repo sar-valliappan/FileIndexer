@@ -200,7 +200,7 @@ The `backend/benchmarking/` directory contains scripts for measuring indexing pe
 
 ### 1. Generate a text set (one-time)
 
-Downloads a sample of public-domain texts from Project Gutenberg to benchmark against:
+Downloads a sample of public-domain texts from Project Gutenberg (.txt files) and DocBank (.pdf files) to benchmark against:
 
 ```bash
 cd backend/benchmarking
@@ -209,17 +209,38 @@ python fetch_gutenberg_texts.py --count 500
 
 Options: `--out-dir` (default: `gutenberg_texts/`), `--workers`, `--seed`, `--min-id`/`--max-id`.
 
-### 2. Run the benchmark
 
 ```bash
-python benchmark.py --dir gutenberg_texts
+python fetch_docbank_pdfs.py --count 100
 ```
 
+Options: `--out-dir` (default: `docbank_pdfs/`), `--workers`.
+
+### 2. Run the benchmark
+
+By default (no `--dir`), the benchmark runs against both named corpora separately —
+`gutenberg_texts` (.txt) and `docbank_pdfs` (.pdf) — so you can see each file type's
+impact independently (e.g. `.pdf` extraction is much slower than `.txt`, since `.txt`
+needs no parsing):
+
+```bash
+python benchmark.py
+```
+
+Use `--corpus txt` or `--corpus pdf` to run just one, or `--dir <path>` to benchmark
+an arbitrary directory instead (single run, not split).
+
 Options:
-- `--num-files N` — limit to the first N matching files
+- `--corpus {txt,pdf,all}` — which named corpus/corpora to run (default: `all`, ignored if `--dir` is set)
+- `--dir <path>` — benchmark an ad hoc directory instead of the named corpora
+- `--num-files N` — limit to the first N matching files per corpus
 - `--note "description"` — label the run in the results log
 - `--no-log` — print results without appending to `benchmarks/results.csv`
 - `--verbose` — print per-file progress
+
+Each corpus run logs its own row (tagged by `corpus` — `txt`, `pdf`, or the directory
+name for `--dir` runs) to `benchmarks/results.csv`/`results.md`, and running more than
+one corpus prints a side-by-side extraction-time comparison at the end.
 
 Each run prints a summary (time and throughput per stage) and appends a row to `benchmarks/results.csv`, regenerating `benchmarks/results.md` as a human-readable history table. Use `--note` to record what changed (e.g. `--note "batched embeddings"`) so runs are easy to compare over time.
 

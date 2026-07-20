@@ -218,3 +218,4 @@ __marimo__/
 # Benchmarking data
 backend/benchmarking/gutenberg_texts/
 backend/benchmarking/.gutenberg_raw_cache/
+backend/benchmarking/docbank_pdfs/
