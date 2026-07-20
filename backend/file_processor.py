@@ -2,7 +2,6 @@ from math import ceil
 import os
 from pathlib import Path
 from typing import Optional
-import pypdf
 from docx import Document
 from pptx import Presentation
 import fileindexer_extract as _native
@@ -15,17 +14,8 @@ class FileProcessor:
 
     @staticmethod
     def extract_text_from_pdf(file_path: str) -> Optional[str]:
-        """Extract text from a PDF file."""
-        try:
-            with open(file_path, 'rb') as file:
-                reader = pypdf.PdfReader(file)
-                text = []
-                for page in reader.pages:
-                    text.append(page.extract_text())
-                return "\n".join(text)
-        except Exception as e:
-            print(f"Error extracting text from PDF: {e}")
-            return None
+        """Extract text from a PDF file (Rust implementation)."""
+        return _native.extract_text_from_pdf(str(file_path))
 
     @staticmethod 
     def extract_text_from_docx(file_path: str) -> Optional[str]:
