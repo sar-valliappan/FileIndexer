@@ -1,0 +1,7 @@
+timestamp,commit,branch,note,corpus,num_files,total_bytes,total_chunks,avg_chunk_chars,extract_s,hash_s,chunk_s,embed_s,db_add_s,total_s,mb_per_s,chunks_per_s,files_per_s
+2026-07-19T21:52:13-07:00,f2dd96b,indexing-improvements,current (batched embed + hash refactor),txt,10,1657994,2036,814.3,0.0078,0.0023,0.0009,76.2509,1.1753,77.4372,0.02,26.29,0.129
+2026-07-19T21:52:13-07:00,f2dd96b,indexing-improvements,current (batched embed + hash refactor),pdf,10,28025158,602,46553.4,18.8047,0.0006,0.0003,20.7109,0.3908,39.9072,0.67,15.08,0.251
+2026-07-07T22:52:01-07:00,82b5397,indexing-improvements,"baseline (one-at-a-time embed, double-extract hash)",txt,10,1657994,2036,814.3,0.0074,0.0025,0.0006,88.4623,1.0237,89.4965,0.018,22.75,0.112
+2026-07-07T22:52:01-07:00,82b5397,indexing-improvements,"baseline (one-at-a-time embed, double-extract hash)",pdf,10,28025158,602,46553.4,33.7605,16.7038,0.0002,27.9735,0.3563,78.7943,0.339,7.64,0.127
+2026-07-07T23:09:15-07:00,1b7a9db,indexing-improvements,batched embed only (pre hash refactor),txt,10,1657994,2036,814.3,0.0123,0.0025,0.0005,77.4603,1.0472,78.5228,0.02,25.93,0.127
+2026-07-07T23:09:15-07:00,1b7a9db,indexing-improvements,batched embed only (pre hash refactor),pdf,10,28025158,602,46553.4,33.9019,16.8204,0.0002,24.1708,0.364,75.2574,0.355,8.0,0.133
