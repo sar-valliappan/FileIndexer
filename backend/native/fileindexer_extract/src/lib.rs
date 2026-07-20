@@ -1,0 +1,24 @@
+use pyo3::prelude::*;
+
+fn extract_plain(path: &str) -> Option<String> {
+    match std::fs::read(path) {
+        Ok(bytes) => Some(String::from_utf8_lossy(&bytes).into_owned()),
+        Err(e) => {
+            eprintln!("Error extracting text from TXT or MD: {e}");
+            None
+        }
+    }
+}
+
+/// A Python module implemented in Rust.
+#[pymodule]
+mod fileindexer_extract {
+    use super::extract_plain;
+    use pyo3::prelude::*;
+
+    /// Extract text from a TXT or MD file (lossy UTF-8 decode).
+    #[pyfunction]
+    fn extract_text(path: &str) -> PyResult<Option<String>> {
+        Ok(extract_plain(path))
+    }
+}

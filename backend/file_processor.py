@@ -5,6 +5,7 @@ from typing import Optional
 import pypdf
 from docx import Document
 from pptx import Presentation
+import fileindexer_extract as _native
 
 from config import Settings
 
@@ -56,13 +57,8 @@ class FileProcessor:
     
     @staticmethod
     def extract_text(file_path: str) -> Optional[str]:
-        """Extract text from a TXT or MD file."""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                return file.read()
-        except Exception as e:
-            print(f"Error extracting text from TXT or MD: {e}")
-            return None
+        """Extract text from a TXT or MD file (Rust implementation)."""
+        return _native.extract_text(str(file_path))
 
     @staticmethod
     def process_file(file_path: str) -> Optional[str]:
