@@ -5,3 +5,10 @@ timestamp,commit,branch,note,corpus,num_files,total_bytes,total_chunks,avg_chunk
 2026-07-07T22:52:01-07:00,82b5397,indexing-improvements,"baseline (one-at-a-time embed, double-extract hash)",pdf,10,28025158,602,46553.4,33.7605,16.7038,0.0002,27.9735,0.3563,78.7943,0.339,7.64,0.127
 2026-07-07T23:09:15-07:00,1b7a9db,indexing-improvements,batched embed only (pre hash refactor),txt,10,1657994,2036,814.3,0.0123,0.0025,0.0005,77.4603,1.0472,78.5228,0.02,25.93,0.127
 2026-07-07T23:09:15-07:00,1b7a9db,indexing-improvements,batched embed only (pre hash refactor),pdf,10,28025158,602,46553.4,33.9019,16.8204,0.0002,24.1708,0.364,75.2574,0.355,8.0,0.133
+2026-07-20T12:10:58,30b317e,rust-migration,Rust extraction (pdf-extract/quick-xml) + rayon-parallel batch extraction,txt,10,1657994,2036,814.3,0.005,0.0026,0.0015,98.833,1.8676,100.7096,0.016,20.22,0.099
+2026-07-20T12:11:31,30b317e,rust-migration,Rust extraction (pdf-extract/quick-xml) + rayon-parallel batch extraction,pdf,10,28025158,611,45867.7,1.9045,0.0009,0.0006,31.0447,0.6315,33.5823,0.796,18.19,0.298
+2026-07-20T12:21:10,1f588ac,,"Rust extraction (pdf+docx), sequential (pre-parallel)",txt,10,1657994,2036,814.3,0.0089,0.0023,0.0013,95.4176,1.9086,97.3387,0.016,20.92,0.103
+2026-07-20T12:21:43,1f588ac,,"Rust extraction (pdf+docx), sequential (pre-parallel)",pdf,10,28025158,611,45867.7,3.5894,0.0009,0.0005,29.2508,0.6498,33.4913,0.798,18.24,0.299
+2026-07-20T12:24:12,30b317e,rust-migration,"Rust extraction + rayon parallel (re-run, back-to-back with sequential comparison)",txt,10,1657994,2036,814.3,0.0033,0.0025,0.0013,91.4105,1.8585,93.276,0.017,21.83,0.107
+2026-07-20T12:24:39,30b317e,rust-migration,"Rust extraction + rayon parallel (re-run, back-to-back with sequential comparison)",pdf,10,28025158,611,45867.7,1.8557,0.001,0.0005,24.6242,0.6444,27.1258,0.985,22.52,0.369
+2026-07-20T12:27:53,30b317e,rust-migration,"plugged into AC power, re-check embed speed",txt,10,1657994,2036,814.3,0.0045,0.0015,0.0007,73.2378,1.071,74.3155,0.021,27.4,0.135

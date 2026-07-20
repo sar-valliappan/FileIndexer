@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import csv
 import subprocess
@@ -66,18 +68,15 @@ class StageTimes:
 
 def instrument(indexer: Indexer, times: StageTimes, counts: dict, num_files: int, verbose: bool) -> None:
     """Wrap the real Indexer's stage methods with timers, without changing its logic."""
-    state = {"path": None}
+    orig_process_files_parallel = indexer.file_processor.process_files_parallel
 
-    orig_process_file = indexer.file_processor.process_file
-
-    def timed_process_file(path, *a, **kw):
+    def timed_process_files_parallel(paths, *a, **kw):
         t0 = time.perf_counter()
-        result = orig_process_file(path, *a, **kw)
+        result = orig_process_files_parallel(paths, *a, **kw)
         times.extract += time.perf_counter() - t0
-        state["path"] = path
         return result
 
-    indexer.file_processor.process_file = timed_process_file
+    indexer.file_processor.process_files_parallel = timed_process_files_parallel
 
     orig_get_file_hash = indexer.get_file_hash
 
@@ -95,13 +94,6 @@ def instrument(indexer: Indexer, times: StageTimes, counts: dict, num_files: int
         t0 = time.perf_counter()
         chunks = orig_chunk_text(text, *a, **kw)
         times.chunk += time.perf_counter() - t0
-        counts["total_chunks"] += len(chunks)
-        counts["files_seen"] += 1
-        path = state["path"]
-        if path is not None:
-            counts["total_bytes"] += path.stat().st_size
-            if verbose:
-                print(f"  [{counts['files_seen']}/{num_files}] {path.name}: {len(chunks)} chunks")
         return chunks
 
     indexer.file_processor.chunk_text = timed_chunk_text
@@ -122,6 +114,15 @@ def instrument(indexer: Indexer, times: StageTimes, counts: dict, num_files: int
         t0 = time.perf_counter()
         result = orig_add(*a, **kw)
         times.db_add += time.perf_counter() - t0
+
+        metadatas = kw.get("metadatas")
+        if metadatas:
+            counts["total_chunks"] += len(metadatas)
+            counts["files_seen"] += 1
+            counts["total_bytes"] += metadatas[0]["file_size"]
+            if verbose:
+                file_name = metadatas[0]["file_name"]
+                print(f"  [{counts['files_seen']}/{num_files}] {file_name}: {len(metadatas)} chunks")
         return result
 
     indexer.collection.add = timed_add
