@@ -111,10 +111,7 @@ fn extract_docx(path: &str) -> Option<String> {
     }
 }
 
-/// Extension-based dispatch, mirroring `FileProcessor.process_file`'s logic
-/// for the formats implemented in Rust (pdf/docx/txt/md). `.pptx` is handled
-/// on the Python side via python-pptx — it isn't in `VALID_FILE_EXTENSIONS`
-/// and was intentionally not ported.
+// Extension-based dispatch to the appropriate extraction function.
 fn process_file_inner(path: &str) -> Option<String> {
     let extension = std::path::Path::new(path)
         .extension()
@@ -166,8 +163,7 @@ mod fileindexer_extract {
         Ok(process_file_inner(path))
     }
 
-    /// Extract text from every path in parallel across CPU cores (GIL released
-    /// via `Python::detach`), returned in the same order as the input.
+    /// Extract text from every path in parallel across CPU cores.
     #[pyfunction]
     fn process_files_parallel(py: Python<'_>, paths: Vec<String>) -> PyResult<Vec<Option<String>>> {
         let results = py.detach(|| {

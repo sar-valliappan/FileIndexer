@@ -60,6 +60,17 @@ else
     echo -e "${GREEN}Ollama is installed!${NC}"
 fi
 
+# Check if Rust is installed (needed to build the native text-extraction module)
+echo -e "${YELLOW}Checking for Rust...${NC}"
+if ! command -v cargo &> /dev/null; then
+    echo -e "${YELLOW}Installing Rust...${NC}"
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+else
+    RUST_VERSION=$(rustc --version)
+    echo -e "${GREEN}$RUST_VERSION is installed!${NC}"
+fi
+
 # Make scripts executable
 echo -e "${YELLOW}Making scripts executable...${NC}"
 chmod +x "$SCRIPT_DIR/start-fileindexer.sh"
@@ -78,6 +89,11 @@ source venv/bin/activate
 echo -e "${YELLOW}Installing Python dependencies...${NC}"
 pip install -q --upgrade pip
 pip install -q -r requirements.txt
+
+echo -e "${YELLOW}Building native text-extraction module (Rust)...${NC}"
+pip install -q maturin
+(cd "$SCRIPT_DIR/backend/native/fileindexer_extract" && maturin develop --release)
+
 deactivate
 
 # Set up Node.js frontend
