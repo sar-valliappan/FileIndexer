@@ -61,31 +61,26 @@ class StageTimes:
 
 def instrument(indexer: Indexer, times: StageTimes, counts: dict, num_files: int, verbose: bool) -> None:
     """Wrap the real Indexer's stage methods with timers, without changing its logic."""
-    state = {"path": None, "in_hash": False}
+    state = {"path": None}
 
     orig_process_file = indexer.file_processor.process_file
 
     def timed_process_file(path, *a, **kw):
         t0 = time.perf_counter()
         result = orig_process_file(path, *a, **kw)
-        dt = time.perf_counter() - t0
-        if state["in_hash"]:
-            times.hash += dt
-        else:
-            times.extract += dt
-            state["path"] = path
+        times.extract += time.perf_counter() - t0
+        state["path"] = path
         return result
 
     indexer.file_processor.process_file = timed_process_file
 
     orig_get_file_hash = indexer.get_file_hash
 
-    def timed_get_file_hash(path, *a, **kw):
-        state["in_hash"] = True
-        try:
-            return orig_get_file_hash(path, *a, **kw)
-        finally:
-            state["in_hash"] = False
+    def timed_get_file_hash(file_text, *a, **kw):
+        t0 = time.perf_counter()
+        result = orig_get_file_hash(file_text, *a, **kw)
+        times.hash += time.perf_counter() - t0
+        return result
 
     indexer.get_file_hash = timed_get_file_hash
 
