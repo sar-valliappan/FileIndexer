@@ -69,11 +69,14 @@ class Indexer:
                         where={"file_path": {"$eq": indexed_path}}
                     )
 
-            for i, file_path in enumerate(file_paths):
+            # Bulk-extract every file's text up front, in parallel across cores
+            # (Rust, GIL released) instead of one file at a time in the loop below.
+            extracted_texts = self.file_processor.process_files_parallel(file_paths)
+
+            for i, (file_path, file_text) in enumerate(zip(file_paths, extracted_texts)):
                 if self.progress_callback:
                     self.progress_callback(f"Indexing {file_path}", i, len(file_paths))
 
-                file_text = self.file_processor.process_file(file_path)
                 if not file_text or not file_text.strip():
                     continue
 

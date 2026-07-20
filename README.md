@@ -42,10 +42,9 @@ I wanted to demonstrate the following skills while also solving a personal probl
 - Custom chunking algorithm with overlap for context preservation
 
 **Document Processing**
-- pypdf for PDF text extraction
-- python-docx for Word document parsing
-- python-pptx for Powerpoint parsing
-- Multi-encoding support for text files (UTF-8, Latin-1, CP1252)
+- Native Rust module (`backend/native/fileindexer_extract`, PyO3 + `pdf-extract`/`quick-xml`) for PDF, DOCX, and plain-text extraction — extraction across a whole directory runs in parallel across CPU cores via `rayon`, with the GIL released
+- python-pptx for Powerpoint parsing (not yet ported to Rust)
+- `install.sh` installs the Rust toolchain and builds the extraction module automatically; if you edit `backend/native/fileindexer_extract` during development, rebuild it with `cd backend/native/fileindexer_extract && maturin develop --release` (with the backend venv active)
 
 ### Frontend Technology Stack
 
@@ -252,9 +251,11 @@ ai-file-search/
 │   ├── main.py                 # FastAPI application entry point
 │   ├── indexer.py              # File indexing and search logic
 │   ├── generate_embeddings.py  # Ollama embedding service
-│   ├── file_processor.py       # Document text extraction
+│   ├── file_processor.py       # Document text extraction (delegates to native/)
 │   ├── config.py               # Application configuration
 │   ├── requirements.txt        # Python dependencies
+│   ├── native/
+│   │   └── fileindexer_extract/  # Rust extraction module (PyO3 + maturin)
 ├── frontend/
 │   ├── src/
 │   │   ├── app/

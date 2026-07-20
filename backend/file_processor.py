@@ -2,9 +2,8 @@ from math import ceil
 import os
 from pathlib import Path
 from typing import Optional
-import pypdf
-from docx import Document
 from pptx import Presentation
+import fileindexer_extract as _native
 
 from config import Settings
 
@@ -14,30 +13,13 @@ class FileProcessor:
 
     @staticmethod
     def extract_text_from_pdf(file_path: str) -> Optional[str]:
-        """Extract text from a PDF file."""
-        try:
-            with open(file_path, 'rb') as file:
-                reader = pypdf.PdfReader(file)
-                text = []
-                for page in reader.pages:
-                    text.append(page.extract_text())
-                return "\n".join(text)
-        except Exception as e:
-            print(f"Error extracting text from PDF: {e}")
-            return None
+        """Extract text from a PDF file (Rust implementation)."""
+        return _native.extract_text_from_pdf(str(file_path))
 
-    @staticmethod 
+    @staticmethod
     def extract_text_from_docx(file_path: str) -> Optional[str]:
-        """Extract text from a DOCX file."""
-        try:
-            doc = Document(file_path)
-            text = []
-            for paragraph in doc.paragraphs:
-                text.append(paragraph.text)
-            return "\n".join(text)
-        except Exception as e:
-            print(f"Error extracting text from DOCX: {e}")
-            return None
+        """Extract text from a DOCX file (Rust implementation)."""
+        return _native.extract_text_from_docx(str(file_path))
     
     @staticmethod
     def extract_text_from_pptx(file_path: str) -> Optional[str]:
@@ -56,31 +38,25 @@ class FileProcessor:
     
     @staticmethod
     def extract_text(file_path: str) -> Optional[str]:
-        """Extract text from a TXT or MD file."""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                return file.read()
-        except Exception as e:
-            print(f"Error extracting text from TXT or MD: {e}")
-            return None
+        """Extract text from a TXT or MD file (Rust implementation)."""
+        return _native.extract_text(str(file_path))
 
     @staticmethod
     def process_file(file_path: str) -> Optional[str]:
         """Process a file and extract its text based on the file type."""
         extension = Path(file_path).suffix.lower()
-        if extension == '.pdf':
-            return FileProcessor.extract_text_from_pdf(file_path)
-        elif extension == '.docx':
-            return FileProcessor.extract_text_from_docx(file_path)
-        elif extension == '.pptx':
+        if extension == '.pptx':
             return FileProcessor.extract_text_from_pptx(file_path)
-        elif extension == '.txt':
-            return FileProcessor.extract_text(file_path)
-        elif extension == '.md':
-            return FileProcessor.extract_text(file_path)
-        else:
-            print(f"Unsupported file type: {extension}")
-            return None
+        return _native.process_file(str(file_path))
+
+    @staticmethod
+    def process_files_parallel(file_paths: list) -> list:
+        """Extract text from every file in parallel (Rust, GIL released).
+
+        Assumes no .pptx paths are present (not in VALID_FILE_EXTENSIONS,
+        and .pptx isn't supported by the Rust extractor).
+        """
+        return _native.process_files_parallel([str(p) for p in file_paths])
     
     @staticmethod
     def chunk_text(text: str, chunk_size: int = settings.CHUNK_SIZE, overlap: int = settings.CHUNK_OVERLAP) -> list:
