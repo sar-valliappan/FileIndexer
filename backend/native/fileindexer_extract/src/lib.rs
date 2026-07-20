@@ -23,11 +23,7 @@ fn extract_pdf(path: &str) -> Option<String> {
     }
 }
 
-/// Pulls text out of `<w:t>`/`<a:t>` runs (matched by local name, ignoring
-/// namespace prefix, so this works for both docx and pptx XML parts) and
-/// joins `<w:p>`/`<a:p>` paragraphs with "\n" — mirrors python-docx's
-/// `paragraph.text` / python-pptx's shape `.text` behavior closely enough
-/// for indexing purposes (not byte-exact: doesn't expand `<w:tab/>`/`<w:br/>`).
+/// Strips out all text runs from an XML part of an OOXML document.
 fn strip_text_runs(xml: &str) -> String {
     let mut reader = Reader::from_str(xml);
     let mut out = String::new();
@@ -86,8 +82,7 @@ fn strip_text_runs(xml: &str) -> String {
     out
 }
 
-/// Reads a single XML part out of a zip (docx/pptx are zipped OOXML) and
-/// strips its text runs.
+/// Reads a single XML part out of a zip (docx/pptx are zipped OOXML) and strips its text runs.
 fn extract_ooxml_part(path: &str, entry: &str) -> Option<String> {
     let file = std::fs::File::open(path)
         .map_err(|e| eprintln!("Error opening file: {e}"))
@@ -116,11 +111,36 @@ fn extract_docx(path: &str) -> Option<String> {
     }
 }
 
+/// Extension-based dispatch, mirroring `FileProcessor.process_file`'s logic
+/// for the formats implemented in Rust (pdf/docx/txt/md). `.pptx` is handled
+/// on the Python side via python-pptx — it isn't in `VALID_FILE_EXTENSIONS`
+/// and was intentionally not ported.
+fn process_file_inner(path: &str) -> Option<String> {
+    let extension = std::path::Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_lowercase());
+    match extension.as_deref() {
+        Some("pdf") => extract_pdf(path),
+        Some("docx") => extract_docx(path),
+        Some("txt") | Some("md") => extract_plain(path),
+        Some(ext) => {
+            println!("Unsupported file type: .{ext}");
+            None
+        }
+        None => {
+            println!("Unsupported file type: ");
+            None
+        }
+    }
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 mod fileindexer_extract {
-    use super::{extract_docx, extract_pdf, extract_plain};
+    use super::{extract_docx, extract_pdf, extract_plain, process_file_inner};
     use pyo3::prelude::*;
+    use rayon::prelude::*;
 
     /// Extract text from a TXT or MD file (lossy UTF-8 decode).
     #[pyfunction]
@@ -138,6 +158,25 @@ mod fileindexer_extract {
     #[pyfunction]
     fn extract_text_from_docx(path: &str) -> PyResult<Option<String>> {
         Ok(extract_docx(path))
+    }
+
+    /// Process a file and extract its text based on extension (pdf/docx/txt/md).
+    #[pyfunction]
+    fn process_file(path: &str) -> PyResult<Option<String>> {
+        Ok(process_file_inner(path))
+    }
+
+    /// Extract text from every path in parallel across CPU cores (GIL released
+    /// via `Python::detach`), returned in the same order as the input.
+    #[pyfunction]
+    fn process_files_parallel(py: Python<'_>, paths: Vec<String>) -> PyResult<Vec<Option<String>>> {
+        let results = py.detach(|| {
+            paths
+                .par_iter()
+                .map(|p| process_file_inner(p))
+                .collect::<Vec<_>>()
+        });
+        Ok(results)
     }
 }
 
