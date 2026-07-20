@@ -44,11 +44,8 @@ class Indexer:
         print(f"Found {len(files)} files to index.")
         return files
     
-    def get_file_hash(self, file_path: Path):
-        with open(file_path, 'rb') as f:
-            file_hash = hashlib.sha256(self.file_processor.process_file(file_path).encode()).hexdigest()
-        
-        return file_hash
+    def get_file_hash(self, file_text: str):
+        return hashlib.sha256(file_text.encode()).hexdigest()
     
     def get_indexed_files(self) -> Dict[str, str]:
         """Return {file_path: file_hash} for already-indexed files."""
@@ -80,7 +77,7 @@ class Indexer:
                 if not file_text or not file_text.strip():
                     continue
 
-                file_hash = self.get_file_hash(file_path)
+                file_hash = self.get_file_hash(file_text)
                 path_str = str(file_path)
 
                 if indexed_files.get(path_str) == file_hash:
